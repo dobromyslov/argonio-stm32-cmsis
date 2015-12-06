@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    system_stm32f0xx.c
   * @author  MCD Application Team
-  * @version V2.0.1
-  * @date    18-June-2014
+  * @version V2.2.2
+  * @date    26-June-2015
   * @brief   CMSIS Cortex-M0 Device Peripheral Access Layer System Source File.
   *
   * 1. This file provides two functions and one global variable to be called from
@@ -42,7 +42,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2015 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -182,15 +182,31 @@ void SystemInit(void)
   /* Reset PREDIV[3:0] bits */
   RCC->CFGR2 &= (uint32_t)0xFFFFFFF0;
 
-#if defined (STM32F071xB) || defined (STM32F072xB) || defined (STM32F078xB)
-  /* Reset USART2SW[1:0] USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits */
+#if defined (STM32F072xB) || defined (STM32F078xx)
+  /* Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits */
   RCC->CFGR3 &= (uint32_t)0xFFFCFE2C;
-#elif defined (STM32F091xC)
-  /* Reset USART3SW[1:0], USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFF0FFAC;
-#else
-  /* Reset USART1SW[1:0], I2C1SW, CECSW, USBSW  and ADCSW bits */
+#elif defined (STM32F071xB)
+  /* Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
+  RCC->CFGR3 &= (uint32_t)0xFFFFCEAC;
+#elif defined (STM32F091xC) || defined (STM32F098xx)
+  /* Reset USART3SW[1:0], USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
+  RCC->CFGR3 &= (uint32_t)0xFFF0FEAC;
+#elif defined (STM32F030x6) || defined (STM32F030x8) || defined (STM32F031x6) || defined (STM32F038xx) || defined (STM32F030xC)
+  /* Reset USART1SW[1:0], I2C1SW and ADCSW bits */
+  RCC->CFGR3 &= (uint32_t)0xFFFFFEEC;
+#elif defined (STM32F051x8) || defined (STM32F058xx)
+  /* Reset USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
+  RCC->CFGR3 &= (uint32_t)0xFFFFFEAC;
+#elif defined (STM32F042x6) || defined (STM32F048xx)
+  /* Reset USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits */
   RCC->CFGR3 &= (uint32_t)0xFFFFFE2C;
+#elif defined (STM32F070x6) || defined (STM32F070xB)
+  /* Reset USART1SW[1:0], I2C1SW, USBSW and ADCSW bits */
+  RCC->CFGR3 &= (uint32_t)0xFFFFFE6C;
+  /* Set default USB clock to PLLCLK, since there is no HSI48 */
+  RCC->CFGR3 |= (uint32_t)0x00000080;  
+#else
+ #warning "No target selected"
 #endif
 
   /* Reset HSI14 bit */
@@ -264,23 +280,26 @@ void SystemCoreClockUpdate (void)
         /* HSE used as PLL clock source : SystemCoreClock = HSE/PREDIV * PLLMUL */
         SystemCoreClock = (HSE_VALUE/predivfactor) * pllmull;
       }
-#if defined(STM32F042x6) || defined(STM32F048xx) || defined(STM32F072xB) || defined(STM32F078xx)
+#if defined(STM32F042x6) || defined(STM32F048xx) || defined(STM32F072xB) || defined(STM32F078xx) || defined(STM32F091xC) || defined(STM32F098xx)
       else if (pllsource == RCC_CFGR_PLLSRC_HSI48_PREDIV)
       {
         /* HSI48 used as PLL clock source : SystemCoreClock = HSI48/PREDIV * PLLMUL */
         SystemCoreClock = (HSI48_VALUE/predivfactor) * pllmull;
       }
-#endif /* STM32F042x6 || STM32F048xx || STM32F072xB || STM32F078xx */
+#endif /* STM32F042x6 || STM32F048xx || STM32F072xB || STM32F078xx || STM32F091xC || STM32F098xx */
       else
       {
-#if defined(STM32F042x6) || defined(STM32F048xx) || \
-    defined(STM32F071xB) || defined(STM32F072xB) || defined(STM32F078xx)
+#if defined(STM32F042x6) || defined(STM32F048xx)  || defined(STM32F070x6) \
+ || defined(STM32F078xx) || defined(STM32F071xB)  || defined(STM32F072xB) \
+ || defined(STM32F070xB) || defined(STM32F091xC) || defined(STM32F098xx)  || defined(STM32F030xC)
         /* HSI used as PLL clock source : SystemCoreClock = HSI/PREDIV * PLLMUL */
         SystemCoreClock = (HSI_VALUE/predivfactor) * pllmull;
 #else
         /* HSI used as PLL clock source : SystemCoreClock = HSI/2 * PLLMUL */
         SystemCoreClock = (HSI_VALUE >> 1) * pllmull;
-#endif /* STM32F042x6 || STM32F048xx || STM32F071xB || STM32F072xB || STM32F078xx */
+#endif /* STM32F042x6 || STM32F048xx || STM32F070x6 || 
+          STM32F071xB || STM32F072xB || STM32F078xx || STM32F070xB ||
+          STM32F091xC || STM32F098xx || STM32F030xC */
       }
       break;
     default: /* HSI used as system clock */

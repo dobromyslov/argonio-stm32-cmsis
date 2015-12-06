@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file      startup_stm32f078xx.s
   * @author    MCD Application Team
-  * @version   V2.0.1
-  * @date      18-June-2014
+  * @version   V2.2.2
+  * @date      26-June-2015
   * @brief     STM32F078xx devices vector table for Atollic TrueSTUDIO toolchain.
   *            This module performs:
   *                - Set the initial SP
@@ -153,7 +153,7 @@ g_pfnVectors:
   .word  PendSV_Handler
   .word  SysTick_Handler
   .word  WWDG_IRQHandler                   /* Window WatchDog              */
-  .word  0                                 /* Reserved                     */
+  .word  VDDIO2_IRQHandler                 /* VDDIO2 Monitor through EXTI Line 31 */
   .word  RTC_IRQHandler                    /* RTC through the EXTI line    */
   .word  FLASH_IRQHandler                  /* FLASH                        */
   .word  RCC_CRS_IRQHandler                /* RCC and CRS                  */
@@ -210,6 +210,9 @@ g_pfnVectors:
 
   .weak      WWDG_IRQHandler
   .thumb_set WWDG_IRQHandler,Default_Handler
+
+  .weak      VDDIO2_IRQHandler
+  .thumb_set VDDIO2_IRQHandler,Default_Handler
 
   .weak      RTC_IRQHandler
   .thumb_set RTC_IRQHandler,Default_Handler
